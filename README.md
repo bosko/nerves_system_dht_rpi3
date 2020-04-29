@@ -1,3 +1,18 @@
+# Building on OS X #
+
+In order to build nerves system on OS X both folders `/var/folders`
+and `/private/var/folders` must be shared in Docker. Since Docker UI
+on OS X does not allow setting both (`/var/folders`) cannot be
+selected configuration file `/Library/Group\
+Containers/group.com.docker/settings.json` must be edited and following two lines
+
+```
+   “\/var\/folders”,
+   “\/private\/var\/folders”
+```
+
+must be added to `filesharingDirectories`.
+
 # Raspberry Pi 3 Model B / B+
 
 [![CircleCI](https://circleci.com/gh/nerves-project/nerves_system_rpi3.svg?style=svg)](https://circleci.com/gh/nerves-project/nerves_system_rpi3)
