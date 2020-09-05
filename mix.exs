@@ -1,7 +1,8 @@
 defmodule NervesSystemDhtRpi3.MixProject do
   use Mix.Project
 
-  @app :nerves_system_rpi3
+  @app :nerves_system_dht_rpi3
+  @source_url "https://github.com/bosko/#{@app}"
   @version Path.join(__DIR__, "VERSION")
            |> File.read!()
            |> String.trim()
@@ -17,7 +18,12 @@ defmodule NervesSystemDhtRpi3.MixProject do
       package: package(),
       deps: deps(),
       aliases: [loadconfig: [&bootstrap/1], docs: ["docs", &copy_images/1]],
-      docs: [extras: ["README.md"], main: "readme"]
+      docs: docs(),
+      preferred_cli_env: %{
+        docs: :docs,
+        "hex.build": :docs,
+        "hex.publish": :docs
+      }
     ]
   end
 
@@ -49,10 +55,10 @@ defmodule NervesSystemDhtRpi3.MixProject do
   defp deps do
     [
       {:nerves, "~> 1.5.4 or ~> 1.6.0", runtime: false},
-      {:nerves_system_br, "1.11.2", runtime: false},
+      {:nerves_system_br, "1.12.4", runtime: false},
       {:nerves_toolchain_arm_unknown_linux_gnueabihf, "~> 1.3.0", runtime: false},
-      {:nerves_system_linter, "~> 0.3.0", runtime: false},
-      {:ex_doc, "~> 0.18", only: [:dev, :test], runtime: false}
+      {:nerves_system_linter, "~> 0.4", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.22", only: :docs, runtime: false}
     ]
   end
 
@@ -62,11 +68,21 @@ defmodule NervesSystemDhtRpi3.MixProject do
     """
   end
 
+  defp docs do
+    [
+      extras: ["README.md", "CHANGELOG.md"],
+      main: "readme",
+      source_ref: "v#{@version}",
+      source_url: @source_url,
+      skip_undefined_reference_warnings_on: ["CHANGELOG.md"]
+    ]
+  end
+
   defp package do
     [
       files: package_files(),
       licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/bosko/#{@app}"}
+      links: %{"GitHub" => @source_url}
     ]
   end
 
