@@ -54,8 +54,8 @@ defmodule NervesSystemDhtRpi3.MixProject do
 
   defp deps do
     [
-      {:nerves, "~> 1.5.4 or ~> 1.6.0", runtime: false},
-      {:nerves_system_br, "1.12.4", runtime: false},
+      {:nerves, "~> 1.5.4 or ~> 1.6.0 or ~> 1.7.0", runtime: false},
+      {:nerves_system_br, "1.13.7", runtime: false},
       {:nerves_toolchain_arm_unknown_linux_gnueabihf, "~> 1.3.0", runtime: false},
       {:nerves_system_linter, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :docs, runtime: false}
@@ -96,7 +96,7 @@ defmodule NervesSystemDhtRpi3.MixProject do
       "fwup-revert.conf",
       "fwup.conf",
       "LICENSE",
-      "linux-4.19.defconfig",
+      "linux-5.4.defconfig",
       "mix.exs",
       "nerves_defconfig",
       "post-build.sh",
@@ -113,10 +113,9 @@ defmodule NervesSystemDhtRpi3.MixProject do
   end
 
   defp build_runner_opts() do
-    if primary_site = System.get_env("BR2_PRIMARY_SITE") do
-      [make_args: ["BR2_PRIMARY_SITE=#{primary_site}"]]
-    else
-      []
+    case System.get_env("BR2_PRIMARY_SITE") do
+      nil -> []
+      primary_site -> [make_args: ["BR2_PRIMARY_SITE=#{primary_site}"]]
     end
   end
 
