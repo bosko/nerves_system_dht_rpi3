@@ -28,12 +28,15 @@ defmodule NervesSystemDhtRpi3.MixProject do
   end
 
   def application do
+    check_rpi_v2_ack!()
     []
   end
 
   defp bootstrap(args) do
     set_target()
     Application.start(:nerves_bootstrap)
+    # We're compiling locally so ack v2 req
+    Application.put_env(:nerves, :rpi_v2_ack, true)
     Mix.Task.run("loadconfig", args)
   end
 
@@ -48,15 +51,24 @@ defmodule NervesSystemDhtRpi3.MixProject do
       platform_config: [
         defconfig: "nerves_defconfig"
       ],
+      # The :env key is an optional experimental feature for adding environment
+      # variables to the crosscompile environment. These are intended for
+      # llvm-based tooling that may need more precise processor information.
+      env: [
+        {"TARGET_ARCH", "arm"},
+        {"TARGET_CPU", "cortex_a53"},
+        {"TARGET_OS", "linux"},
+        {"TARGET_ABI", "gnueabihf"}
+      ],
       checksum: package_files()
     ]
   end
 
   defp deps do
     [
-      {:nerves, "~> 1.5.4 or ~> 1.6.0 or ~> 1.7.0", runtime: false},
-      {:nerves_system_br, "1.13.7", runtime: false},
-      {:nerves_toolchain_arm_unknown_linux_gnueabihf, "~> 1.3.0", runtime: false},
+      {:nerves, "~> 1.5.4 or ~> 1.6.0 or ~> 1.7.4", runtime: false},
+      {:nerves_system_br, "1.14.4", runtime: false},
+      {:nerves_toolchain_armv7_nerves_linux_gnueabihf, "~> 1.4.0", runtime: false},
       {:nerves_system_linter, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :docs, runtime: false}
     ]
@@ -99,6 +111,7 @@ defmodule NervesSystemDhtRpi3.MixProject do
       "linux-5.4.defconfig",
       "mix.exs",
       "nerves_defconfig",
+      "nerves_initramfs.conf",
       "post-build.sh",
       "post-createfs.sh",
       "ramoops.dts",
@@ -124,6 +137,42 @@ defmodule NervesSystemDhtRpi3.MixProject do
       apply(Mix, :target, [:target])
     else
       System.put_env("MIX_TARGET", "target")
+    end
+  end
+
+  defp check_rpi_v2_ack!() do
+    acked? = Application.get_env(:nerves, :rpi_v2_ack) || System.get_env("NERVES_RPI_V2_ACK")
+
+    unless acked? do
+      Mix.raise("""
+
+
+      You are using #{@app} >= 2.0.0 which is technically
+      backwards compatible, but requires one manual step if
+      you are attempting to update the firmware on an existing
+      device via ssh, upload script, NervesHub, or other remote
+      firmware update procedure.
+
+      You will need to validate the running firmware on the
+      device before installing a firmware built with this system.
+      Otherwise, you will get an unexpected and misleading fwup error.
+
+      To validate and avoid the fwup error, run:
+
+        Nerves.Runtime.validate_firmware()
+
+      Or if using :nerves_runtime < 0.11.2, run:
+
+        Nerves.Runtime.KV.put("nerves_fw_validated", "1")
+
+      If you are burning the firmware directly to a SD card, then
+      nothing needs to be done.
+
+      To allow compilation to complete, acknowledge you have read
+      this warning by adding this line to your `config.exs`:
+
+        config :nerves, rpi_v2_ack: true
+      """)
     end
   end
 end
